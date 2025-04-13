@@ -19,6 +19,7 @@ def generate_admin_report(
     try:
         start_date = date.fromisoformat(start_date_str)
         end_date = date.fromisoformat(end_date_str)
+        
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -11,7 +11,7 @@ def generate_report(db: Session, report_request: ReportRequest):
     weekly_paid_amount = 0
     weekly_due_amount = 0
     monthly_paid_amount = 0
-    monthly_due_amount = 0
+    monthly_due_amount = 0 
 
     weekly_start = start_date
     while weekly_start < end_date:
