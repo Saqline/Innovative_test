@@ -1,6 +1,6 @@
-from app.db import models
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.db.session import get_db
 from app.api.schemas.products import (
     ProductCreate,
@@ -9,13 +9,14 @@ from app.api.schemas.products import (
     ProductListResponse
 )
 from app.api.service.products import (
-    get_products,
     create_product,
     get_product,
+    get_products,
     update_product,
     delete_product
 )
-from app.core.security import get_current_active_user, is_admin, oauth2_scheme
+from app.core.security import get_current_active_user, is_admin
+from app.db import models
 
 router = APIRouter()
 
@@ -23,11 +24,16 @@ router = APIRouter()
 def list_products(
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=100),
-    order_by: str = Query("created_at"),
+    category_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     skip = (page - 1) * size
-    products, total = get_products(db, skip=skip, limit=size, order_by=order_by)
+    products, total = get_products(
+        db, 
+        skip=skip, 
+        limit=size,
+        category_id=category_id
+    )
     return {
         "items": products,
         "total": total,
@@ -41,7 +47,6 @@ def create_new_product(
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    
     if not is_admin(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

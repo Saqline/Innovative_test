@@ -1,48 +1,28 @@
-from app.api.router import  auth, installments, purchases, users
-from fastapi import FastAPI
-from app.api.router import products,reports,notifications
+from app.api.router import auth, installments, purchases, users, categories
+from fastapi import FastAPI, Request
+from app.api.router import products, reports, notifications
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db.session import engine
 from app.db.base import Base
-from app.db import models
-from app.api.schemas.auth import UserCreate
-from app.api.service.auth import create_user
-from app.core.security import get_password_hash
-Base.metadata.create_all(bind=engine)
+from app.core.init_data import initialize_data
 
-def create_admin_user(db: Session):
-    
-    hashed_password = get_password_hash("admin")
-    admin_data = UserCreate(
-        name="admin",
-        email="admin@admin.com",
-        password=hashed_password
-    )
-    
-    existing_admin = db.query(models.User).filter(
-        models.User.email == admin_data.email
-    ).first()
-    
-    if existing_admin:
-        if existing_admin:
-            existing_admin.hashed_password = hashed_password
-            existing_admin.role = "admin"
-            existing_admin.is_active=True
-            existing_admin.is_verified=True
-            db.commit()
-    else:
-        admin_user = create_user(db, admin_data)
-        admin_user.role = "admin"
-        admin_user.is_active=True
-        admin_user.is_verified=True
-        db.commit()
+# Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Installment Tracker API")
 
-# Create admin user on startup
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    print(f"Response status: {response.status_code}")
+    return response
+
+# Initialize default data on startup
 with Session(engine) as db:
-    create_admin_user(db)
+    initialize_data(db)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -53,9 +33,9 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(categories.router, prefix="/api/v1/categories", tags=["Categories"])
 app.include_router(products.router, prefix="/api/v1/products", tags=["Products"])
 app.include_router(purchases.router, prefix="/api/v1/purchases", tags=["Purchases"])
 app.include_router(installments.router, prefix="/api/v1/installments", tags=["Installments"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["Notifications"])
-
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])

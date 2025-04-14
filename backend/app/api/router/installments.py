@@ -6,6 +6,14 @@ from app.api.service.installments import pay_installment, get_user_installments
 from app.core.security import get_current_active_user, is_admin
 from app.db.models import User
 from typing import Optional
+from pydantic import BaseModel
+
+class InstallmentListResponse(BaseModel):
+    items: list[InstallmentResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 router = APIRouter()
 
@@ -17,7 +25,7 @@ def pay_existing_installment(
 ):
     return pay_installment(db, installment_id, current_user.id)
 
-@router.get("/me", response_model=list[InstallmentResponse])
+@router.get("/me", response_model=InstallmentListResponse)
 def read_user_installments(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),

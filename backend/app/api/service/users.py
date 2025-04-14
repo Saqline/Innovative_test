@@ -41,3 +41,28 @@ def get_customers(
     customers = query.all()
 
     return customers
+
+def delete_user(db: Session, user_id: int) -> None:
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Prevent deletion of admin users
+    if user.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete admin users"
+        )
+    
+    # Check if user has any purchases
+    if user.purchases:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete user with existing purchases"
+        )
+    
+    db.delete(user)
+    db.commit()

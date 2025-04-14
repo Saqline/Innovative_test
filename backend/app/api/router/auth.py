@@ -10,14 +10,19 @@ from app.api.schemas.auth import (
     OTPVerify,
     Token,
     LoginRequest,
-    LoginBody
+    LoginBody,
+    ResendOTPRequest,
+    ResendOTPResponse
 )
 from app.api.service.auth import (
     create_user,
     verify_otp,
     authenticate_user,
-    send_otp_email
+    send_otp_email,
+    resend_otp
 )
+import random
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
@@ -49,6 +54,9 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+
+
     access_token = create_access_token(subject=user.email)
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -61,5 +69,43 @@ def login_body(login_data: LoginBody, db: Session = Depends(get_db)):
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Check if user is verified
+    if not user.is_verified:
+        # Generate new OTP and send it
+        otp = str(random.randint(100000, 999999))
+        otp_expiry = datetime.utcnow() + timedelta(minutes=5)
+        
+        user.otp = otp
+        user.otp_expiry = otp_expiry
+        db.commit()
+        
+        # Send OTP email
+        # send_otp_email(user.email, otp)
+        
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "message": "User not verified",
+                "email": user.email,
+                "require_verification": True
+            }
+        )
+
     access_token = create_access_token(subject=user.email)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "Bearer", 
+        "User": user
+    }
+
+@router.post("/resend-otp", response_model=ResendOTPResponse)
+def resend_otp_endpoint(
+    request: ResendOTPRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Resend OTP for email verification
+    """
+    return resend_otp(db, request.email)
+

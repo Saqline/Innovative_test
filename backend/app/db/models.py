@@ -13,8 +13,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
+    phone_number = Column(String, unique=True, nullable=True)
     hashed_password = Column(String, nullable=False)
-    role=Column(String,default=RoleEnum.customer.value)
+    role = Column(String, default=RoleEnum.customer.value)
     otp = Column(String, nullable=True)
     otp_expiry = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=False)
@@ -24,11 +25,22 @@ class User(Base):
     purchases = relationship("Purchase", backref="user")
     notifications = relationship("Notification", backref="user")
 
+class Category(Base):
+    __tablename__ = "categories"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    products = relationship("Product", backref="category")
+
 class Product(Base):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True, index=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     name = Column(String, nullable=False)
     price = Column(Float, nullable=False)
+    stock = Column(Integer, default=0, nullable=False)  # Add stock field
+    image_url = Column(String, nullable=True)
     description = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime,nullable=True)
@@ -40,10 +52,11 @@ class Purchase(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False, default=1)  # Add quantity field
     total_amount = Column(Float, nullable=False)
     paid_amount = Column(Float, default=0)
     due_amount = Column(Float, nullable=False)
-    installments = Column(Integer, nullable=False)
+    number_of_installments = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime,nullable=True)
 
