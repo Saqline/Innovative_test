@@ -1,7 +1,18 @@
-import React, { useState, useMemo } from 'react';
-import { useTable, useSortBy, useGlobalFilter, usePagination } from 'react-table';
+import React, { useState } from 'react';
+import { useTable, useSortBy, useGlobalFilter, usePagination, useExpanded } from 'react-table'; // Import useExpanded
 
-const DataTable = ({ columns, data, title, filterPlaceholder }) => {
+// Define a default sub-component renderer
+const defaultSubRowComponent = () => null;
+
+const DataTable = ({ 
+  columns, 
+  data, 
+  title, 
+  filterPlaceholder, 
+  renderRowSubComponent = defaultSubRowComponent, 
+  getRowCanExpand = () => false,
+  onRowClick = () => {} // Add prop for row click handler
+}) => {
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   
   const {
@@ -25,13 +36,14 @@ const DataTable = ({ columns, data, title, filterPlaceholder }) => {
       columns,
       data,
       initialState: { pageIndex: 0, pageSize: 10 },
-    },
-    useGlobalFilter,
-    useSortBy,
-    usePagination
-  );
-
-  const { pageIndex, pageSize } = state;
+     },
+     useGlobalFilter,
+     useSortBy,
+     useExpanded, // Correct order: useExpanded before usePagination
+     usePagination 
+   );
+ 
+  const { pageIndex, pageSize, visibleColumns } = state; // Add visibleColumns
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -94,21 +106,39 @@ const DataTable = ({ columns, data, title, filterPlaceholder }) => {
               page.map((row, i) => {
                 prepareRow(row);
                 return (
-                  <tr key={`row-${i}`} {...row.getRowProps()} className="hover:bg-gray-50">
-                    {row.cells.map((cell, j) => (
-                      <td
-                        key={`cell-${i}-${j}`}
-                        {...cell.getCellProps()}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                      >
-                        {cell.render('Cell')}
-                      </td>
-                    ))}
-                  </tr>
+                  // Use React.Fragment to wrap the main row and the potential sub-row
+                  <React.Fragment key={`row-frag-${i}`}>
+                    <tr 
+                      {...row.getRowProps()} 
+                      className="hover:bg-gray-50 cursor-pointer" // Add cursor-pointer
+                      onClick={() => onRowClick(row)} // Attach onClick handler
+                    >
+                      {row.cells.map((cell, j) => {
+                        return (
+                          <td
+                            key={`cell-${i}-${j}`}
+                            {...cell.getCellProps()}
+                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                          >
+                            {cell.render('Cell')}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                    {/* Render the sub-component if the row is expanded */}
+                    {row.isExpanded && getRowCanExpand(row) ? (
+                      <tr className="bg-gray-50"> {/* Optional: Add styling for sub-row */}
+                        <td colSpan={visibleColumns.length} className="p-2"> {/* Adjust padding */}
+                          {/* Call the render prop */}
+                          {renderRowSubComponent({ row })}
+                        </td>
+                      </tr>
+                    ) : null}
+                  </React.Fragment>
                 );
               })
             ) : (
-              <tr>
+            <tr>
                 <td colSpan={columns.length} className="px-6 py-4 text-center text-sm text-gray-500">
                   No data available
                 </td>

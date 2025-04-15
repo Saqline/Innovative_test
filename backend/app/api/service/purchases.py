@@ -126,14 +126,17 @@ def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
 
 def get_purchases_with_installments(
     db: Session,
-    user_id: int,
+    user_id: Optional[int] = None,
     page: int = 1,
     page_size: int = 10,
     status: Optional[str] = None
 ) -> List[models.Purchase]:
     query = db.query(models.Purchase)\
-        .options(joinedload(models.Purchase.purchase_installments))\
-        .filter(models.Purchase.user_id == user_id)
+        .options(joinedload(models.Purchase.purchase_installments))
+    
+    # Apply user_id filter only if provided
+    if user_id is not None:
+        query = query.filter(models.Purchase.user_id == user_id)
     
     if status:
         query = query.filter(models.Purchase.status == status)

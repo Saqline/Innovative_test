@@ -8,6 +8,7 @@ class InstallmentResponse(BaseModel):
     amount: float
     due_date: datetime
     is_paid: bool
+    status: str
     paid_date: datetime | None
 
     class Config:

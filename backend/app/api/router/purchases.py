@@ -47,6 +47,5 @@ def read_admin_purchases(
         user_id=user_id,
         page=page,
         page_size=page_size,
-        status=status,
-        is_admin=True
+        status=status
     )

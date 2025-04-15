@@ -31,6 +31,7 @@ import AdminSettings from './pages/admin/Settings';
 import CustomerDetail from './pages/admin/CustomerDetail';
 import AdminCategories from './pages/admin/Categories';
 import AdminPurchases from './pages/admin/Purchases';
+import AdminPurchaseDetail from './pages/admin/PurchaseDetail'; // Import the new component
 import AdminNotifications from './pages/admin/Notifications';
 
 function App() {
@@ -74,6 +75,7 @@ function App() {
             <Route path="reports" element={<AdminReports />} />
             <Route path="categories" element={<AdminCategories />} />
              <Route path="purchases" element={<AdminPurchases />} />
+             <Route path="purchases/:id" element={<AdminPurchaseDetail />} /> {/* Add route for purchase detail */}
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
