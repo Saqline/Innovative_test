@@ -35,7 +35,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     user = create_user(db, user_data)
-    # send_otp_email(user.email, user.otp)
+    send_otp_email(user.email, user.otp)
     return user
 
 @router.post("/verify-otp", response_model=UserResponse)

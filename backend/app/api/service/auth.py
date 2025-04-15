@@ -79,7 +79,7 @@ def resend_otp(db: Session, email: str) -> dict:
     db.commit()
     
     # Send OTP email
-    # send_otp_email(user.email, otp)
+    send_otp_email(user.email, otp)
     
     return {
         "email": user.email,

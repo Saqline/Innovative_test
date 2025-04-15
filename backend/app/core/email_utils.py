@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from app.core.config import settings
 
 def send_email(to_email: str, subject: str, body: str):
+    print("Sending email to:", to_email)
     msg = MIMEText(body)
     msg["Subject"] = subject
     msg["From"] = settings.EMAIL_USER

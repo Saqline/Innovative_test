@@ -34,7 +34,6 @@ def create_notification(db: Session, notification_data, current_user: models.Use
             detail="Only admins can create notifications"
         )
     notification = models.Notification(**notification_data.model_dump())
-    notification.user_id = current_user.id
     db.add(notification)
     db.commit()
     from app.core.email_utils import send_email
@@ -44,6 +43,6 @@ def create_notification(db: Session, notification_data, current_user: models.Use
     if notification.notification_type == "email":
         user = db.query(models.User).filter(models.User.id == notification.user_id).first()
         if user:
-            send_email(email_to=user.email, subject="New Notification", body=notification.message)
+            send_email(to_email=user.email, subject="New Notification", body=notification.message)
 
     return notification
