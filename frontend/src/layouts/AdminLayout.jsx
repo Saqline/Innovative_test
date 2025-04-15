@@ -22,10 +22,12 @@ const AdminLayout = () => {
     const path = location.pathname;
     if (path === '/admin') return 'Dashboard';
     if (path.includes('/admin/products')) return 'Products Management';
+    if (path.includes('/admin/categories')) return 'Categories Management';
+    if (path.includes('/admin/purchases')) return 'Purchase Management';
     if (path.includes('/admin/customers')) return 'Customer Management';
     if (path.includes('/admin/installments')) return 'Installment Management';
     if (path.includes('/admin/reports')) return 'Reports';
-    if (path.includes('/admin/settings')) return 'Settings';
+    // if (path.includes('/admin/settings')) return 'Settings';
     return 'Admin Panel';
   };
 
@@ -64,7 +66,7 @@ const AdminLayout = () => {
               `group flex items-center px-4 py-3 text-sm font-medium rounded-md ${
                 isActive 
                   ? 'bg-primary-50 text-primary-600' 
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  : 'text-gray-6 hover:bg-gray-50 hover:text-gray-900'
               }`
             }
           >
@@ -72,7 +74,46 @@ const AdminLayout = () => {
             Products
           </NavLink>
           <NavLink 
-            to="/admin/customers" 
+            to="/admin/categories" 
+            className={({ isActive }) => 
+              `group flex items-center px-4 py-3 text-sm font-medium rounded-md ${
+                isActive 
+                  ? 'bg-primary-50 text-primary-600' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`
+            }
+          >
+            <i className="bi bi-tags mr-3 text-lg"></i>
+            Categories
+          </NavLink>
+           <NavLink
+            to="/admin/purchases"
+            className={({ isActive }) =>
+              `group flex items-center px-4 py-3 text-sm font-medium rounded-md ${
+                isActive
+                  ? 'bg-primary-50 text-primary-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`
+            }
+          >
+            <i className="bi bi-cart-check mr-3 text-lg"></i>
+            Purchases
+          </NavLink>
+          <NavLink
+            to="/admin/notifications"
+            className={({ isActive }) =>
+              `group flex items-center px-4 py-3 text-sm font-medium rounded-md ${
+                isActive
+                  ? 'bg-primary-50 text-primary-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`
+            }
+          >
+            <i className="bi bi-bell mr-3 text-lg"></i>
+            Notifications
+          </NavLink>
+          <NavLink 
+            to="/admin/customers"
             className={({ isActive }) => 
               `group flex items-center px-4 py-3 text-sm font-medium rounded-md ${
                 isActive 
@@ -110,7 +151,7 @@ const AdminLayout = () => {
             <i className="bi bi-bar-chart mr-3 text-lg"></i>
             Reports
           </NavLink>
-          <NavLink 
+          {/* <NavLink 
             to="/admin/settings" 
             className={({ isActive }) => 
               `group flex items-center px-4 py-3 text-sm font-medium rounded-md ${
@@ -122,7 +163,7 @@ const AdminLayout = () => {
           >
             <i className="bi bi-gear mr-3 text-lg"></i>
             Settings
-          </NavLink>
+          </NavLink> */}
         </nav>
         <div className="absolute bottom-0 w-full">
           <div className="px-4 py-4 border-t border-gray-200">

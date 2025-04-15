@@ -14,7 +14,7 @@ def create_default_users(db: Session):
         name="admin",
         email="admin@admin.com",
         password="admin",
-        phone_number="+1234567890"  # Added phone number
+        phone_number="+1234567890"  
     )
     
     existing_admin = db.query(models.User).filter(
@@ -28,7 +28,7 @@ def create_default_users(db: Session):
         existing_admin.role = "admin"
         existing_admin.is_active = True
         existing_admin.is_verified = True
-        existing_admin.phone_number = admin_data.phone_number  # Added phone number
+        existing_admin.phone_number = admin_data.phone_number  
         db.commit()
     else:
         # Create new admin
@@ -123,7 +123,6 @@ def create_default_products(db: Session, categories: list[models.Category]):
             "image_url": "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
             "category_id": next(cat.id for cat in categories if cat.name == "Gaming")
         },
-        # New products for remaining categories
         {
             "name": "iPad Pro 12.9",
             "price": 1099.00,

@@ -6,6 +6,7 @@ from sqlalchemy import asc, desc
 from app.db import models
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from typing import Optional
 
 def get_current_user(db: Session, email: str) -> UserResponse:
     user = db.query(models.User).filter(models.User.email == email).first()
@@ -22,20 +23,27 @@ def get_customers(
     page_size: int = 10,
     sort_by: str = "created_at",
     sort_order: str = "asc",
-    name: str = None,
+    name: Optional[str] = None,
+    role: Optional[str] = None,
 ):
     query = db.query(models.User)
 
+    # Apply filters
     if name:
         query = query.filter(models.User.name.ilike(f"%{name}%"))
+    
+    if role:
+        query = query.filter(models.User.role == role)
 
+    # Apply sorting
     if sort_order == "asc":
-        order = asc(sort_by)
+        order = asc(getattr(models.User, sort_by))
     else:
-        order = desc(sort_by)
+        order = desc(getattr(models.User, sort_by))
 
     query = query.order_by(order)
 
+    # Apply pagination
     total = query.count()
     query = query.offset((page - 1) * page_size).limit(page_size)
     customers = query.all()

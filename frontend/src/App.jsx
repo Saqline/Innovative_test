@@ -29,6 +29,9 @@ import AdminInstallments from './pages/admin/Installments';
 import AdminReports from './pages/admin/Reports';
 import AdminSettings from './pages/admin/Settings';
 import CustomerDetail from './pages/admin/CustomerDetail';
+import AdminCategories from './pages/admin/Categories';
+import AdminPurchases from './pages/admin/Purchases';
+import AdminNotifications from './pages/admin/Notifications';
 
 function App() {
   return (
@@ -69,6 +72,9 @@ function App() {
             <Route path="customers/:id" element={<CustomerDetail />} />
             <Route path="installments" element={<AdminInstallments />} />
             <Route path="reports" element={<AdminReports />} />
+            <Route path="categories" element={<AdminCategories />} />
+             <Route path="purchases" element={<AdminPurchases />} />
+            <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
           

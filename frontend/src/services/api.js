@@ -48,19 +48,7 @@ const fetchWithAuth = async (url, options = {}) => {
   return response.json();
 };
 
-// Specific API functions
-export const getProducts = (page = 1, size = 10, categoryId = null) => {
-  const params = new URLSearchParams({ page, size });
-  if (categoryId) {
-    params.append('category_id', categoryId);
-  }
-  return fetchWithAuth(`/api/v1/products/?${params.toString()}`);
-};
-
-export const getProductById = (productId) => {
-  return fetchWithAuth(`/api/v1/products/${productId}`);
-};
-
+// Specific API functions (moved product functions to api/products.js)
 export const getUserPurchases = (page = 1, pageSize = 10) => {
   const params = new URLSearchParams({ page, page_size: pageSize });
   return fetchWithAuth(`/api/v1/purchases/me?${params.toString()}`);
@@ -72,6 +60,11 @@ export const getUserInstallments = (isPaid = null, sortBy = 'due_date', sortOrde
     params.append('is_paid', isPaid);
   }
   return fetchWithAuth(`/api/v1/installments/me?${params.toString()}`);
+};
+
+// Function to get a single product by its ID
+export const getProductById = (productId) => {
+  return fetchWithAuth(`/api/v1/products/${productId}`);
 };
 
 // Add other API functions as needed (e.g., createPurchase, payInstallment)
@@ -90,6 +83,27 @@ export const updateInstallment = (installmentId, installmentData) => {
     method: 'PATCH',
     body: JSON.stringify(installmentData),
   });
+};
+
+// Function to get installments (Admin only)
+export const getInstallments = (page = 1, pageSize = 10, status = null, isPaid = null, userId = null, sortBy = 'due_date', sortOrder = 'desc') => {
+  const params = new URLSearchParams({
+    page: String(page),
+    page_size: String(pageSize),
+    sort_by: sortBy,
+    sort_order: sortOrder,
+  });
+  if (status) {
+    params.append('status', status);
+  }
+  if (isPaid !== null) {
+    params.append('is_paid', String(isPaid));
+  }
+  if (userId) {
+    params.append('user_id', String(userId));
+  }
+  // Note: Ensure the backend endpoint matches '/api/v1/admin/installments'
+  return fetchWithAuth(`/api/v1/installments/admin?${params.toString()}`);
 };
 
 export default fetchWithAuth;

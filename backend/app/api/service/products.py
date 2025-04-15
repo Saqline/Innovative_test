@@ -6,7 +6,6 @@ from app.api.schemas.products import ProductCreate, ProductUpdate
 from datetime import datetime
 
 def create_product(db: Session, product_data: ProductCreate) -> models.Product:
-    # Verify category exists
     category = db.query(models.Category).filter(
         models.Category.id == product_data.category_id
     ).first()
@@ -49,7 +48,6 @@ def get_product(db: Session, product_id: int) -> models.Product:
 def update_product(db: Session, product_id: int, product_data: ProductUpdate) -> models.Product:
     product = get_product(db, product_id)
     
-    # If category_id is being updated, verify the new category exists
     if product_data.category_id and product_data.category_id != product.category_id:
         category = db.query(models.Category).filter(
             models.Category.id == product_data.category_id
@@ -72,7 +70,6 @@ def update_product(db: Session, product_id: int, product_data: ProductUpdate) ->
 def delete_product(db: Session, product_id: int) -> None:
     product = get_product(db, product_id)
     
-    # Check if product has any purchases
     if product.purchases:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

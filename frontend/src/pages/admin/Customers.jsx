@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DataTable from '../../components/admin/DataTable';
-import { Link } from 'react-router-dom';
+// Link removed as View action is being removed for now
+// import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getCustomers, deleteCustomer } from '../../services/api/users'; // Import API functions
 
-// Mock data for customers
-const initialCustomers = [
+// Mock data removed
+/* Mock data structure for reference:
   {
     id: 1,
     name: 'John Doe',
@@ -85,15 +87,24 @@ const initialCustomers = [
     joinDate: '2023-03-15',
     status: 'inactive'
   }
-];
+*/
 
 const Customers = () => {
-  const [customers, setCustomers] = useState(initialCustomers);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState(null);
-  
-  // Table columns
-  const columns = [
+  const [pagination, setPagination] = useState({
+    page: 1,
+    size: 10, // Corresponds to page_size in backend
+    total: 0, // Will be fetched from API if available, otherwise calculated
+  });
+  // Add state for sorting if needed later
+  // const [sorting, setSorting] = useState({ sortBy: 'created_at', sortOrder: 'desc' });
+
+  // Table columns updated for backend data
+  const columns = React.useMemo(() => [
     {
       Header: 'Customer',
       accessor: 'name',
@@ -113,32 +124,35 @@ const Customers = () => {
     },
     {
       Header: 'Phone',
-      accessor: 'phone',
+      accessor: 'phone_number', // Use phone_number from backend
+      Cell: ({ value }) => value || 'N/A' // Display N/A if null
+    },
+    // Removed Total Spent - Not available from backend
+    // Removed Active Installments - Not available from backend
+    {
+      Header: 'Joined',
+      accessor: 'created_at', // Use created_at from backend
+      Cell: ({ value }) => value ? new Date(value).toLocaleDateString() : 'N/A' // Format date
     },
     {
-      Header: 'Total Spent',
-      accessor: 'totalSpent',
-      Cell: ({ value }) => `$${value.toFixed(2)}`
-    },
-    {
-      Header: 'Active Installments',
-      accessor: 'activeInstallments',
-    },
-    {
-      Header: 'Join Date',
-      accessor: 'joinDate',
-      Cell: ({ value }) => new Date(value).toLocaleDateString()
+      Header: 'Verified',
+      accessor: 'is_verified',
+      Cell: ({ value }) => (
+         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+           value ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+         }`}>
+           {value ? 'Yes' : 'No'}
+         </span>
+      )
     },
     {
       Header: 'Status',
-      accessor: 'status',
+      accessor: 'is_active', // Use is_active from backend
       Cell: ({ value }) => (
         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-          value === 'active' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-gray-100 text-gray-800'
+          value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
         }`}>
-          {value.charAt(0).toUpperCase() + value.slice(1)}
+          {value ? 'Active' : 'Inactive'}
         </span>
       )
     },
@@ -146,22 +160,18 @@ const Customers = () => {
       Header: 'Actions',
       Cell: ({ row }) => (
         <div className="flex space-x-2">
-          <Link
-            to={`/admin/customers/${row.original.id}`}
-            className="text-primary-600 hover:text-primary-900"
-          >
-            View
-          </Link>
+          {/* View Link Removed as endpoint doesn't exist */}
           <button
             onClick={() => handleDeleteClick(row.original)}
             className="text-red-600 hover:text-red-900"
+            aria-label={`Delete customer ${row.original.name}`} // Accessibility improvement
           >
             Delete
           </button>
         </div>
       )
     }
-  ];
+  ], []); // Added React.useMemo hook
   
   // Handle delete click
   const handleDeleteClick = (customer) => {
@@ -169,15 +179,77 @@ const Customers = () => {
     setIsDeleteModalOpen(true);
   };
   
-  // Handle delete confirm
-  const handleDeleteConfirm = () => {
-    if (customerToDelete) {
-      setCustomers(customers.filter(c => c.id !== customerToDelete.id));
-      toast.success(`${customerToDelete.name} has been deleted`);
+  // Handle delete confirm - Updated to call API
+  const handleDeleteConfirm = async () => {
+    if (!customerToDelete) return;
+    setLoading(true); // Indicate loading during delete
+    try {
+      await deleteCustomer(customerToDelete.id);
+      toast.success(`Customer ${customerToDelete.name} has been deleted`);
       setIsDeleteModalOpen(false);
       setCustomerToDelete(null);
+      // Refresh data, potentially adjusting page if last item on page deleted
+      // Note: Backend doesn't return total count, so pagination adjustment is tricky.
+      // We'll just refetch the current page for now.
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete customer:", err);
+      toast.error(`Error deleting customer: ${err.message}`);
+      setLoading(false); // Reset loading on error
+    }
+    // setLoading(false) will be handled in fetchData's finally block
+  };
+
+  // Fetching logic
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch customers for the current page/size
+      // TODO: Add sorting parameters if implementing table sorting
+      const customerData = await getCustomers(pagination.page, pagination.size);
+      // Backend returns a list directly, not an object with 'items' and 'total'
+      setCustomers(customerData || []);
+      // Since backend doesn't return total, we can't implement accurate pagination controls easily.
+      // We'll hide total/page count for now or assume the returned length is the total for the page.
+      // setPagination(prev => ({ ...prev, total: customerData.total || 0 }));
+    } catch (err) {
+      console.error("Failed to fetch customers:", err);
+      const errorMsg = err.message || 'Failed to fetch customers';
+      setError(errorMsg);
+      toast.error(`Error: ${errorMsg}`);
+      setCustomers([]); // Clear customers on error
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.page, pagination.size]); // Add sorting state here if implemented
+
+  // useEffect to call fetchData
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Handle pagination change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1) {
+      setPagination(prev => ({ ...prev, page: newPage }));
     }
   };
+
+  const handleSizeChange = (newSize) => {
+    setPagination(prev => ({ ...prev, page: 1, size: newSize }));
+  };
+
+  // Render loading state
+  if (loading && customers.length === 0) {
+    return <div className="text-center py-10">Loading customers...</div>;
+  }
+
+  // Render error state
+  if (error) {
+    return <div className="text-center py-10 text-red-600">Error loading customers: {error}</div>;
+  }
+
 
   return (
     <div>
@@ -185,72 +257,56 @@ const Customers = () => {
         <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
         <p className="text-gray-600">Manage your customer accounts and view their installment history</p>
       </div>
-      
-      {/* Customer Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-primary-100 text-primary-600">
-              <i className="bi bi-people text-2xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Customers</p>
-              <p className="text-2xl font-semibold text-gray-800">{customers.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-600">
-              <i className="bi bi-person-check text-2xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active Customers</p>
-              <p className="text-2xl font-semibold text-gray-800">
-                {customers.filter(c => c.status === 'active').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-secondary-100 text-secondary-600">
-              <i className="bi bi-credit-card text-2xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Installments</p>
-              <p className="text-2xl font-semibold text-gray-800">
-                {customers.reduce((sum, customer) => sum + customer.activeInstallments, 0)}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-accent-100 text-accent-600">
-              <i className="bi bi-currency-dollar text-2xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-semibold text-gray-800">
-                ${customers.reduce((sum, customer) => sum + customer.totalSpent, 0).toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
+
+      {/* Customer Stats Removed - Data not available from current endpoint */}
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"> ... </div> */}
+
       {/* Customers Table */}
-      <DataTable 
-        columns={columns} 
-        data={customers} 
-        title="Customer List" 
-        filterPlaceholder="Search customers..." 
+      <DataTable
+        columns={columns}
+        data={customers}
+        title="Customer List"
+        filterPlaceholder="Search customers..."
+        // Pass loading state if DataTable supports it
+        // loading={loading}
       />
-      
+
+      {/* Basic Pagination Controls - Adjusted as total count is not available */}
+       <div className="mt-4 flex justify-end items-center">
+         {/* Removed total count display */}
+         {/* <span>Page {pagination.page} ({customers.length} items shown)</span> */}
+         <div>
+           <button
+             onClick={() => handlePageChange(pagination.page - 1)}
+             disabled={pagination.page <= 1 || loading}
+             className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+           >
+             Previous
+           </button>
+           <span className="mx-2">Page {pagination.page}</span>
+           <button
+             onClick={() => handlePageChange(pagination.page + 1)}
+             // Disable 'Next' if the current page has fewer items than page size,
+             // indicating it might be the last page. This is an approximation.
+             disabled={customers.length < pagination.size || loading}
+             className="ml-2 px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+           >
+             Next
+           </button>
+           {/* Page size selector */}
+           <select
+             value={pagination.size}
+             onChange={(e) => handleSizeChange(Number(e.target.value))}
+             disabled={loading}
+             className="ml-4 p-1 border rounded disabled:opacity-50"
+           >
+             <option value={10}>10 per page</option>
+             <option value={25}>25 per page</option>
+             <option value={50}>50 per page</option>
+           </select>
+         </div>
+       </div>
+
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-10 overflow-y-auto">

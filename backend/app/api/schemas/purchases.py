@@ -30,8 +30,10 @@ class PurchaseResponse(BaseModel):
     paid_amount: float
     due_amount: float
     number_of_installments: int
+    status: str
     created_at: datetime
     updated_at: datetime | None
+    purchase_installments: List[InstallmentResponse]
 
     class Config:
         from_attributes = True

@@ -91,12 +91,13 @@ const DataTable = ({ columns, data, title, filterPlaceholder }) => {
           </thead>
           <tbody {...getTableBodyProps()} className="bg-white divide-y divide-gray-200">
             {page.length > 0 ? (
-              page.map(row => {
+              page.map((row, i) => {
                 prepareRow(row);
                 return (
-                  <tr {...row.getRowProps()} className="hover:bg-gray-50">
-                    {row.cells.map(cell => (
+                  <tr key={`row-${i}`} {...row.getRowProps()} className="hover:bg-gray-50">
+                    {row.cells.map((cell, j) => (
                       <td
+                        key={`cell-${i}-${j}`}
                         {...cell.getCellProps()}
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                       >

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ProductCard from '../../components/customer/ProductCard';
-import { getProducts } from '../../services/api'; // Import API function
+import { getProducts } from '../../services/api/products'; // Import from products service
 import { toast } from 'react-toastify';
 
 // Mock Categories (replace with API call if available)

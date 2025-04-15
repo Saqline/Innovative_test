@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException, status
 from sqlalchemy import update
 from decimal import Decimal
+from typing import Optional, List, Tuple
+from sqlalchemy.orm import joinedload
 
 def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
     """Create a new purchase with installments"""
@@ -45,6 +47,9 @@ def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
     due_amount = total_amount - paid_amount
     number_of_installments = 2 if due_amount > 0 else 1
 
+    # Determine initial status
+    initial_status = models.PaymentStatusEnum.paid.value if paid_amount >= total_amount else models.PaymentStatusEnum.pending.value
+
     # Start transaction
     try:
         # Create purchase record
@@ -56,6 +61,7 @@ def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
             paid_amount=paid_amount,
             due_amount=due_amount,
             number_of_installments=number_of_installments,
+            status=initial_status,
             created_at=datetime.utcnow()
         )
         db.add(new_purchase)
@@ -82,6 +88,7 @@ def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
                 amount=paid_amount,
                 due_date=datetime.utcnow(),
                 is_paid=True,
+                status=models.PaymentStatusEnum.paid.value,
                 paid_date=datetime.utcnow()
             )
             db.add(first_installment)
@@ -94,6 +101,7 @@ def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
                 amount=due_amount,
                 due_date=datetime.utcnow() + timedelta(days=30),
                 is_paid=False,
+                status=models.PaymentStatusEnum.pending.value,
                 paid_date=None
             )
             db.add(second_installment)
@@ -116,40 +124,30 @@ def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
             detail="Failed to process purchase"
         )
 
-def get_purchases_with_installments(db: Session, user_id: int = None, page: int = 1, page_size: int = 10):
-    """Get purchases with their installments"""
-    query = db.query(models.Purchase)
-
-    if user_id:
-        query = query.filter(models.Purchase.user_id == user_id)
-
+def get_purchases_with_installments(
+    db: Session,
+    user_id: int,
+    page: int = 1,
+    page_size: int = 10,
+    status: Optional[str] = None
+) -> List[models.Purchase]:
+    query = db.query(models.Purchase)\
+        .options(joinedload(models.Purchase.purchase_installments))\
+        .filter(models.Purchase.user_id == user_id)
+    
+    if status:
+        query = query.filter(models.Purchase.status == status)
+    
     # Calculate offset
     offset = (page - 1) * page_size
-
-    # Get paginated purchases
-    purchases = query.order_by(models.Purchase.created_at.desc()).offset(offset).limit(page_size).all()
-
-    # Get installments for each purchase
-    result = []
-    for purchase in purchases:
-        installments = db.query(models.Installment).filter(
-            models.Installment.purchase_id == purchase.id
-        ).all()
-
-        # Create response object with all required fields
-        purchase_response = {
-            "id": purchase.id,
-            "user_id": purchase.user_id,
-            "product_id": purchase.product_id,
-            "quantity": purchase.quantity,
-            "total_amount": purchase.total_amount,
-            "paid_amount": purchase.paid_amount,
-            "due_amount": purchase.due_amount,
-            "number_of_installments": purchase.number_of_installments,
-            "created_at": purchase.created_at,
-            "updated_at": purchase.updated_at,
-            "purchase_installments": installments
-        }
-        result.append(purchase_response)
-
-    return result
+    
+    # Get total count
+    total = query.count()
+    
+    # Get paginated results
+    purchases = query.order_by(models.Purchase.created_at.desc())\
+        .offset(offset)\
+        .limit(page_size)\
+        .all()
+    
+    return purchases

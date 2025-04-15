@@ -5,7 +5,7 @@ from typing import Optional
 class ProductBase(BaseModel):
     name: str
     price: float
-    stock: int = Field(ge=0)  # Ensure stock is non-negative
+    stock: int = Field(ge=0)  
     description: Optional[str] = None
     category_id: int
     image_url: Optional[str] = None

@@ -17,7 +17,7 @@ def create_user(db: Session, user_data):
     db_user = models.User(
         email=user_data.email,
         name=user_data.name,
-        hashed_password=hashed_password,  # Store the hashed password, not the plain password
+        hashed_password=hashed_password,  
         otp=otp,
         otp_expiry=otp_expiry,
         is_active=False
