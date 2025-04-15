@@ -32,6 +32,7 @@ import CustomerDetail from './pages/admin/CustomerDetail';
 import AdminCategories from './pages/admin/Categories';
 import AdminPurchases from './pages/admin/Purchases';
 import AdminPurchaseDetail from './pages/admin/PurchaseDetail'; // Import the new component
+import CustomerPurchases from './pages/customer/Purchases'; // Import the new component
 import AdminNotifications from './pages/admin/Notifications';
 
 function App() {
@@ -58,9 +59,10 @@ function App() {
             <Route path="checkout/:id" element={<Checkout />} />
             <Route path="payment-success" element={<PaymentSuccess />} />
             <Route path="installments" element={<CustomerInstallments />} />
+            <Route path="purchases" element={<CustomerPurchases />} /> {/* Add the new route here */}
             <Route path="profile" element={<CustomerProfile />} />
           </Route>
-          
+
           {/* Admin Routes */}
           <Route path="/admin" element={
             <ProtectedRoute role="admin">

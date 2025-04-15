@@ -12,6 +12,14 @@ export const getPurchases = (page = 1, pageSize = 10, status = null, userId = nu
   if (userId) {
     params.append('user_id', String(userId));
   }
-  // Note: Ensure the backend endpoint matches '/api/v1/admin/purchases'
   return fetchWithAuth(`/api/v1/purchases/admin?${params.toString()}`);
+};
+
+// Function to get current user's purchases
+export const getUserPurchases = (page = 1, pageSize = 10) => {
+  const params = new URLSearchParams({
+    page: String(page),
+    page_size: String(pageSize),
+  });
+  return fetchWithAuth(`/api/v1/purchases/me?${params.toString()}`);
 };

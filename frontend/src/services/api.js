@@ -54,13 +54,23 @@ export const getUserPurchases = (page = 1, pageSize = 10) => {
   return fetchWithAuth(`/api/v1/purchases/me?${params.toString()}`);
 };
 
-export const getUserInstallments = (isPaid = null, sortBy = 'due_date', sortOrder = 'desc') => {
-  const params = new URLSearchParams({ sort_by: sortBy, sort_order: sortOrder });
+// Updated getUserInstallments to support pagination and status filtering
+export const getUserInstallments = (page = 1, pageSize = 10, isPaid = null, status = null, sortBy = 'due_date', sortOrder = 'desc') => {
+  const params = new URLSearchParams({
+    page: String(page),
+    page_size: String(pageSize),
+    sort_by: sortBy,
+    sort_order: sortOrder,
+  });
   if (isPaid !== null) {
-    params.append('is_paid', isPaid);
+    params.append('is_paid', String(isPaid));
+  }
+  if (status) {
+    params.append('status', status);
   }
   return fetchWithAuth(`/api/v1/installments/me?${params.toString()}`);
 };
+
 
 // Function to get a single product by its ID
 export const getProductById = (productId) => {
@@ -77,21 +87,19 @@ export const createPurchase = (purchaseData) => {
   });
 };
 
-// Function to update an installment
-export const updateInstallment = (installmentId, installmentData) => {
+// Function to pay an installment (replaces updateInstallment)
+export const payInstallment = (installmentId) => {
+  // The backend endpoint doesn't require a request body for paying
   return fetchWithAuth(`/api/v1/installments/${installmentId}/pay`, {
     method: 'PATCH',
-    body: JSON.stringify(installmentData),
   });
 };
+
 
 // Function to get installments (Admin only)
 export const getInstallments = (page = 1, pageSize = 10, status = null, isPaid = null, userId = null, sortBy = 'due_date', sortOrder = 'desc') => {
   const params = new URLSearchParams({
     page: String(page),
-    page_size: String(pageSize),
-    sort_by: sortBy,
-    sort_order: sortOrder,
   });
   if (status) {
     params.append('status', status);

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DataTable from '../../components/admin/DataTable';
 import { toast } from 'react-toastify';
-import { getInstallments, updateInstallment } from '../../services/api'; // Import API function
-// import { payInstallment } from '../../services/api/installments'; // Remove this import
+import { getInstallments, payInstallment } from '../../services/api';
 
 const Installments = () => {
   const [installments, setInstallments] = useState([]);
@@ -128,7 +127,7 @@ const Installments = () => {
     try {
       // Call the backend API to record the payment
       // Assuming you have a payInstallment API function
-      await updateInstallment(selectedInstallment.id, { is_paid: true });
+      await payInstallment(selectedInstallment.id);
       toast.success(`Payment of $${amount.toFixed(2)} recorded successfully`);
       setIsPaymentModalOpen(false);
       setSelectedInstallment(null);
