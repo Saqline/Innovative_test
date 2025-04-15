@@ -12,14 +12,20 @@ from app.api.schemas.auth import (
     LoginRequest,
     LoginBody,
     ResendOTPRequest,
-    ResendOTPResponse
+    ResendOTPResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse
 )
 from app.api.service.auth import (
     create_user,
     verify_otp,
     authenticate_user,
     send_otp_email,
-    resend_otp
+    resend_otp,
+    initiate_password_reset,
+    reset_password
 )
 import random
 from datetime import datetime, timedelta
@@ -59,7 +65,7 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "User": user  # Add the User field to match the Token model
+        "User": user  
     }
 
 @router.post("/login", response_model=Token)
@@ -83,7 +89,7 @@ def login_body(login_data: LoginBody, db: Session = Depends(get_db)):
         db.commit()
         
         # Send OTP email
-        # send_otp_email(user.email, otp)
+        send_otp_email(user.email, otp)
         
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -110,4 +116,20 @@ def resend_otp_endpoint(
     Resend OTP for email verification
     """
     return resend_otp(db, request.email)
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+def forgot_password(
+    request: ForgotPasswordRequest,
+    db: Session = Depends(get_db)
+):
+
+    return initiate_password_reset(db, request.email)
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+def reset_password_endpoint(
+    request: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    
+    return reset_password(db, request.email, request.otp, request.new_password)
 

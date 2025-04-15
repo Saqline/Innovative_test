@@ -40,3 +40,18 @@ class ResendOTPRequest(BaseModel):
 class ResendOTPResponse(BaseModel):
     email: EmailStr
     message: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+
+class ResetPasswordResponse(BaseModel):
+    message: str
