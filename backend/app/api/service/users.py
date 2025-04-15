@@ -72,5 +72,17 @@ def delete_user(db: Session, user_id: int) -> None:
             detail="Cannot delete user with existing purchases"
         )
     
+    # Delete associated notifications first
+    db.query(models.Notification).filter(models.Notification.user_id == user_id).delete()
+    
+    # Now delete the user
     db.delete(user)
-    db.commit()
+    
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user. Please try again."
+        )
