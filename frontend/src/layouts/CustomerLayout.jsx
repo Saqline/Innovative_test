@@ -1,11 +1,36 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, NavLink, useNavigate, Outlet } from 'react-router-dom';
+import { getCart } from '../services/api/cart';
 import { useAuth } from '../contexts/AuthContext';
 
 const CustomerLayout = () => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      try {
+        const cartData = await getCart();
+        setCartItemCount(cartData.total_items);
+      } catch (error) {
+        console.error('Failed to fetch cart count:', error);
+      }
+    };
+
+    fetchCartCount();
+
+    // Add event listener for cart updates
+    const handleCartUpdate = () => {
+      fetchCartCount();
+    };
+    window.addEventListener('cart-updated', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('cart-updated', handleCartUpdate);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -69,9 +94,40 @@ const CustomerLayout = () => {
                 >
                   My Purchases
                 </NavLink>
+                <NavLink 
+                  to="/customer/cart" 
+                  className={({ isActive }) => 
+                    isActive 
+                      ? "border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" 
+                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  }
+                >
+                  <div className="flex items-center">
+                    <i className="bi bi-cart3 text-xl mr-1"></i>
+                    Cart
+                    {cartItemCount > 0 && (
+                      <span className="ml-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </div>
+                </NavLink>
               </nav>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:items-center">
+              <NavLink 
+                to="/customer/cart" 
+                className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800 mr-4"
+              >
+                <div className="relative">
+                  <i className="bi bi-cart3 text-xl"></i>
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </div>
+              </NavLink>
               <div className="ml-3 relative">
                 <div className="flex items-center">
                   <NavLink 
@@ -151,6 +207,25 @@ const CustomerLayout = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 My Purchases
+              </NavLink>
+              <NavLink 
+                to="/customer/cart" 
+                className={({ isActive }) => 
+                  isActive 
+                    ? "bg-primary-50 border-primary-500 text-primary-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium" 
+                    : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                }
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className="flex items-center">
+                  <i className="bi bi-cart3 mr-2"></i>
+                  Cart
+                  {cartItemCount > 0 && (
+                    <span className="ml-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </div>
               </NavLink>
             </div>
             <div className="pt-4 pb-3 border-t border-gray-200">

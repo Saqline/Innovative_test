@@ -19,6 +19,7 @@ import CustomerProfile from './pages/customer/Profile';
 import ProductDetail from './pages/customer/ProductDetail';
 import Checkout from './pages/customer/Checkout';
 import PaymentSuccess from './pages/customer/PaymentSuccess';
+import CartPage from './pages/customer/CartPage';
 
 // Admin Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -56,10 +57,11 @@ function App() {
             <Route index element={<CustomerDashboard />} />
             <Route path="products" element={<CustomerProducts />} />
             <Route path="products/:id" element={<ProductDetail />} />
+            <Route path="cart" element={<CartPage />} />
             <Route path="checkout/:id" element={<Checkout />} />
             <Route path="payment-success" element={<PaymentSuccess />} />
             <Route path="installments" element={<CustomerInstallments />} />
-            <Route path="purchases" element={<CustomerPurchases />} /> {/* Add the new route here */}
+            <Route path="purchases" element={<CustomerPurchases />} />
             <Route path="profile" element={<CustomerProfile />} />
           </Route>
 

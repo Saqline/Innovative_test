@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Enum
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from enum import Enum as PyEnum
@@ -29,6 +29,7 @@ class User(Base):
 
     purchases = relationship("Purchase", backref="user")
     notifications = relationship("Notification", backref="user")
+    cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
 
 class Category(Base):
     __tablename__ = "categories"
@@ -51,6 +52,7 @@ class Product(Base):
     updated_at = Column(DateTime, nullable=True)
 
     purchases = relationship("Purchase", backref="product")
+    cart_items = relationship("CartItem", back_populates="product")
 
 class Purchase(Base):
     __tablename__ = "purchases"
@@ -88,3 +90,21 @@ class Notification(Base):
     notification_type = Column(String, nullable=False)
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, default=1, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="cart_items")
+    product = relationship("Product", back_populates="cart_items")
+
+    # Add unique constraint to prevent duplicate products in cart
+    __table_args__ = (
+        UniqueConstraint('user_id', 'product_id', name='unique_user_product_cart'),
+    )

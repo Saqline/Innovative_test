@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { getProductById, createPurchase } from '../../services/api'; // Import API function
+import { getProductById } from '../../services/api/products';
+import { addToCart } from '../../services/api/cart'; // Import the addToCart function
 
 // Placeholder image if product image is missing
 const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300?text=No+Image';
@@ -13,6 +14,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false); // New state for tracking API call
   // Note: Installment options are not part of the ProductResponse from the backend API
   // We'll need a separate mechanism or predefined rules if installments are needed here.
   // const [selectedInstallment, setSelectedInstallment] = useState(null);
@@ -75,10 +77,25 @@ const handleBuyNow = () => {
   }
 };
 
-  const handleAddToCart = () => {
-    // TODO: Implement actual add to cart logic
-    if (product) {
+  const handleAddToCart = async () => {
+    if (!product) {
+      toast.error('Product details not available.');
+      return;
+    }
+
+    if (quantity > product.stock) {
+      toast.error(`Only ${product.stock} items available in stock.`);
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      await addToCart(product.id, quantity);
       toast.success(`${product.name} added to cart (quantity: ${quantity})`);
+    } catch (error) {
+      toast.error(error.message || 'Failed to add item to cart');
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
@@ -234,10 +251,17 @@ const handleBuyNow = () => {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    disabled={isAddingToCart || !product || product.stock === 0}
+                    className={`flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
+                      (isAddingToCart || !product || product.stock === 0) ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
-                    <i className="bi bi-cart-plus mr-2"></i>
-                    Add to Cart
+                    {isAddingToCart ? (
+                      <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
+                    ) : (
+                      <i className="bi bi-cart-plus mr-2"></i>
+                    )}
+                    {isAddingToCart ? 'Adding...' : 'Add to Cart'}
                   </button>
                 </div>
               </div>
