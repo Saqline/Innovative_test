@@ -1,7 +1,9 @@
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt
+from fastapi import status
 from app.core.config import settings
+from app.api.service.users import get_current_user
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -51,3 +53,14 @@ def is_admin(user: models.User = Depends(get_current_active_user)):
     if not user.role == "admin":
         raise HTTPException(status_code=403, detail="Not an admin")
     return True
+
+async def is_admin_user(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> models.User:
+    if not current_user or current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admin users can access this resource"
+        )
+    return current_user

@@ -3,19 +3,14 @@ import DashboardStats from '../../components/customer/DashboardStats';
 import InstallmentCard from '../../components/customer/InstallmentCard';
 import PaymentHistory from '../../components/customer/PaymentHistory';
 import { Link } from 'react-router-dom';
-import { getUserPurchases, getUserInstallments } from '../../services/api'; // Import API functions
+import { getUserPurchases, getUserInstallments } from '../../services/api'; // Assuming these are still needed for other parts
 import { toast } from 'react-toastify';
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({
-    activeInstallments: 0,
-    completedPayments: 0,
-    upcomingPayments: 0,
-    overduePayments: 0
-  });
+  // Removed stats state
   const [activeInstallments, setActiveInstallments] = useState([]);
-  const [upcomingPayments, setUpcomingPayments] = useState([]);
-  const [overduePayments, setOverduePayments] = useState([]);
+  const [upcomingPayments, setUpcomingPayments] = useState([]); // Assuming this is still needed for the table
+  const [overduePayments, setOverduePayments] = useState([]); // Assuming this is still needed for the reminder
   const [recentPayments, setRecentPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,20 +29,15 @@ const Dashboard = () => {
         const purchases = purchasesData.items || [];
         const completedPayments = purchases.filter(p => p.status === 'paid').length;
         const upcomingPayments = purchases.filter(p => p.status === 'pending').length;
-        const overduePayments = purchases.filter(p => p.status === 'overdue').length;
+        // Removed stats calculation
 
-        // Process installments data
+        // Process installments data (assuming still needed for other sections)
         const installments = installmentsData.items || [];
         const activeInstallments = installments.filter(i => i.status !== 'paid');
-        const recentPayments = installments.flatMap(i => i.payment_history || []);
+        const recentPayments = installments.flatMap(i => i.payment_history || []); // Assuming PaymentHistory component uses this
 
-        setStats({
-          activeInstallments: activeInstallments.length,
-          completedPayments,
-          upcomingPayments,
-          overduePayments
-        });
         setActiveInstallments(activeInstallments);
+        // Assuming the upcoming/overdue logic below is still needed for other parts of the dashboard
         setUpcomingPayments(activeInstallments.filter(i => i.status === 'pending'));
         setOverduePayments(activeInstallments.filter(i => i.status === 'overdue'));
         setRecentPayments(recentPayments);
@@ -86,8 +76,8 @@ const Dashboard = () => {
         <p className="text-gray-600">Welcome back! Here's an overview of your installments.</p>
       </div>
 
-      {/* Dashboard Stats */}
-      <DashboardStats stats={stats} />
+      {/* Dashboard Stats - No longer passing stats prop */}
+      <DashboardStats />
 
       {/* Active Installments */}
       <div className="mb-8">

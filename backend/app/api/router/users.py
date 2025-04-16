@@ -43,9 +43,6 @@ def delete_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(is_admin)
 ):
-    """
-    Delete a user by ID. Only accessible by admin users.
-    Returns 204 No Content on success.
-    """
+  
     delete_user(db, user_id)
     return None

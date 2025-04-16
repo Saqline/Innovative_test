@@ -1,3 +1,5 @@
+from app.api.schemas.notifications import NotificationResponse, PurchaseNotificationCreate
+from app.api.service.notifications import send_purchase_notification
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -48,4 +50,19 @@ def read_admin_purchases(
         page=page,
         page_size=page_size,
         status=status
+    )
+
+@router.post("/{purchase_id}/notify", response_model=NotificationResponse)
+def send_purchase_notification_endpoint(
+    purchase_id: int,
+    notification_data: PurchaseNotificationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Send notification for a specific purchase with custom message"""
+    return send_purchase_notification(
+        db=db,
+        purchase_id=purchase_id,
+        current_user=current_user,
+        custom_message=notification_data.message
     )

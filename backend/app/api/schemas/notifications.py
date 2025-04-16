@@ -1,5 +1,4 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field, validator
 
 class NotificationBase(BaseModel):
     message: str
@@ -22,3 +21,17 @@ class NotificationListResponse(BaseModel):
     total: int
     page: int
     size: int
+
+class PurchaseNotificationCreate(BaseModel):
+    message: str = Field(
+        ...,  # Makes the field required
+        min_length=1,
+        max_length=500,
+        description="Custom message for the purchase notification"
+    )
+
+    @validator('message')
+    def validate_message(cls, v):
+        if not v.strip():
+            raise ValueError('Message cannot be empty or just whitespace')
+        return v.strip()

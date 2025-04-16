@@ -23,3 +23,11 @@ export const getUserPurchases = (page = 1, pageSize = 10) => {
   });
   return fetchWithAuth(`/api/v1/purchases/me?${params.toString()}`);
 };
+
+// Function to send a notification for a specific purchase
+export const sendPurchaseNotification = (purchaseId, message) => {
+  return fetchWithAuth(`/api/v1/purchases/${purchaseId}/notify`, {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  });
+};

@@ -98,3 +98,35 @@ def get_user_installments(
         "page_size": page_size,
         "total_pages": (total + page_size - 1) // page_size
     }
+
+def get_user_installment_stats(db: Session, user_id: int) -> dict:
+    # Query all installments for the user
+    installments = db.query(models.Installment)\
+        .join(models.Purchase)\
+        .filter(models.Purchase.user_id == user_id)\
+        .all()
+    
+    # Initialize counters
+    stats = {
+        "paid": 0,
+        "pending": 0,
+        "overdue": 0,
+        "total": len(installments),
+        "total_paid_amount": 0.0,
+        "total_pending_amount": 0.0,
+        "total_overdue_amount": 0.0
+    }
+    
+    # Calculate stats
+    for installment in installments:
+        if installment.status == models.PaymentStatusEnum.paid.value:
+            stats["paid"] += 1
+            stats["total_paid_amount"] += installment.amount
+        elif installment.status == models.PaymentStatusEnum.pending.value:
+            stats["pending"] += 1
+            stats["total_pending_amount"] += installment.amount
+        elif installment.status == models.PaymentStatusEnum.overdue.value:
+            stats["overdue"] += 1
+            stats["total_overdue_amount"] += installment.amount
+    
+    return stats

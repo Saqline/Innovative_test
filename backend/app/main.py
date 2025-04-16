@@ -1,6 +1,6 @@
 from app.api.router import auth, installments, purchases, users, categories
 from fastapi import FastAPI, Request
-from app.api.router import products, reports, notifications
+from app.api.router import products, reports, notifications, admin_stats
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db.session import engine
@@ -39,3 +39,4 @@ app.include_router(purchases.router, prefix="/api/v1/purchases", tags=["Purchase
 app.include_router(installments.router, prefix="/api/v1/installments", tags=["Installments"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["Notifications"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
+app.include_router(admin_stats.router, prefix="/api/v1/admin/stats", tags=["Admin Stats"])

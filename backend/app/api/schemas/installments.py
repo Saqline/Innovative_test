@@ -13,3 +13,5 @@ class InstallmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+

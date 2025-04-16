@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.api.schemas.installments import InstallmentResponse
-from app.api.service.installments import pay_installment, get_user_installments
+from app.api.service.installments import pay_installment, get_user_installments, get_user_installment_stats
 from app.core.security import get_current_active_user, is_admin
 from app.db.models import User, PaymentStatusEnum
 from typing import Optional
@@ -70,3 +70,11 @@ def read_admin_installments(
         sort_order=sort_order,
         is_admin=True
     )
+
+@router.get("/stats", response_model=dict)
+def get_installment_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get installment statistics for the current user"""
+    return get_user_installment_stats(db, current_user.id)
