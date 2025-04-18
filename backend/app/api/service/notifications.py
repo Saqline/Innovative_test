@@ -79,13 +79,12 @@ def send_purchase_notification(
     db.commit()
     db.refresh(notification)
     
-    # Send email
-    # user = db.query(models.User).filter(models.User.id == purchase.user_id).first()
-    # if user:
-    #     send_email(
-    #         email_to=user.email,
-    #         subject=f"Purchase Installment Information",
-    #         body=notification.message
-    #     )
+    user = db.query(models.User).filter(models.User.id == purchase.user_id).first()
+    if user:
+        send_email(
+            to_email=user.email,
+            subject=f"Purchase Installment Information",
+            body=notification.message
+        )
     
     return notification

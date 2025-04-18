@@ -53,7 +53,7 @@ const Login = () => {
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
             <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-              sign in to your existing account
+              Sign Up For New User
             </Link>
           </p>
         </div>

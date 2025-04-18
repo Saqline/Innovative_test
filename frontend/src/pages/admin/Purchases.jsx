@@ -1,6 +1,7 @@
  import React, { useState, useEffect, useCallback } from 'react';
  import { useNavigate } from 'react-router-dom'; // Import useNavigate
  import DataTable from '../../components/admin/DataTable';
+ import CreatePurchaseModal from '../../components/admin/CreatePurchaseModal';
  import { toast } from 'react-toastify';
  import { getPurchases } from '../../services/api/purchases'; // Import API function
  
@@ -16,6 +17,11 @@
     size: 10,
     total: 0,
   });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleCreateSuccess = () => {
+    fetchData(); // Refresh the purchases list
+  };
 
   // Fetch purchases from API
   const fetchData = useCallback(async () => {
@@ -117,10 +123,15 @@
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Purchase Management</h1>
-        <p className="text-gray-600">View and manage customer purchases</p>
+    <div className="p-4">
+      <div className="mb-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Purchases</h1>
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Create Purchase
+        </button>
       </div>
 
       {/* Filtering Options */}
@@ -173,6 +184,12 @@
            onRowClick={handleRowClick} 
          />
       )}
+
+      <CreatePurchaseModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   );
 };

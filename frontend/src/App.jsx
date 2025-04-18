@@ -10,16 +10,17 @@ import VerifyOTP from './pages/auth/VerifyOTP';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 
-// Customer Pages
-import CustomerLayout from './layouts/CustomerLayout';
-import CustomerDashboard from './pages/customer/Dashboard';
-import CustomerProducts from './pages/customer/Products';
-import CustomerInstallments from './pages/customer/Installments';
-import CustomerProfile from './pages/customer/Profile';
-import ProductDetail from './pages/customer/ProductDetail';
-import Checkout from './pages/customer/Checkout';
-import PaymentSuccess from './pages/customer/PaymentSuccess';
-import CartPage from './pages/customer/CartPage';
+// // Customer Pages
+// import CustomerLayout from './layouts/CustomerLayout';
+// import CustomerDashboard from './pages/customer/Dashboard';
+// import CustomerProducts from './pages/customer/Products';
+// import CustomerInstallments from './pages/customer/Installments';
+// import CustomerProfile from './pages/customer/Profile';
+// import ProductDetail from './pages/customer/ProductDetail';
+// import Checkout from './pages/customer/Checkout';
+// import PaymentSuccess from './pages/customer/PaymentSuccess';
+// import CartPage from './pages/customer/CartPage';
+// import CustomerPurchases from './pages/customer/Purchases'; // Import the new component
 
 // Admin Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -33,7 +34,7 @@ import CustomerDetail from './pages/admin/CustomerDetail';
 import AdminCategories from './pages/admin/Categories';
 import AdminPurchases from './pages/admin/Purchases';
 import AdminPurchaseDetail from './pages/admin/PurchaseDetail'; // Import the new component
-import CustomerPurchases from './pages/customer/Purchases'; // Import the new component
+
 import AdminNotifications from './pages/admin/Notifications';
 
 function App() {
@@ -49,12 +50,12 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Customer Routes */}
-          <Route path="/customer" element={
+          {/* <Route path="/customer" element={
             <ProtectedRoute role="customer">
               <CustomerLayout />
             </ProtectedRoute>
-          }>
-            <Route index element={<CustomerDashboard />} />
+          }> */}
+            {/* <Route index element={<CustomerDashboard />} />
             <Route path="products" element={<CustomerProducts />} />
             <Route path="products/:id" element={<ProductDetail />} />
             <Route path="cart" element={<CartPage />} />
@@ -62,8 +63,8 @@ function App() {
             <Route path="payment-success" element={<PaymentSuccess />} />
             <Route path="installments" element={<CustomerInstallments />} />
             <Route path="purchases" element={<CustomerPurchases />} />
-            <Route path="profile" element={<CustomerProfile />} />
-          </Route>
+            <Route path="profile" element={<CustomerProfile />} /> */}
+          {/* </Route> */}
 
           {/* Admin Routes */}
           <Route path="/admin" element={

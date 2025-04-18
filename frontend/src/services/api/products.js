@@ -10,6 +10,14 @@ export const getProducts = (page = 1, size = 10, categoryId = null) => {
   return fetchWithAuth(`/api/v1/products/?${params.toString()}`);
 };
 
+export const getProducts_new = async (page = 1, pageSize = 100) => {
+  const params = new URLSearchParams({
+    page: String(page),
+    page_size: String(pageSize)
+  });
+  return fetchWithAuth(`/api/v1/products?${params.toString()}`);
+};
+
 // Function to get a single product by its ID
 export const getProductById = (productId) => {
   // Note: Ensure the backend endpoint matches '/api/v1/products/{productId}'
@@ -42,3 +50,5 @@ export const deleteProduct = (productId) => {
     method: 'DELETE',
   });
 };
+
+

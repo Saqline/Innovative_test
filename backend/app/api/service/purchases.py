@@ -8,8 +8,24 @@ from decimal import Decimal
 from typing import Optional, List, Tuple
 from sqlalchemy.orm import joinedload
 
-def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
-    """Create a new purchase with installments"""
+def create_purchase(db: Session, purchase: PurchaseCreate, current_user_id: int):
+    """Create a new purchase with custom installments"""
+    
+    # Verify user exists and check permissions
+    target_user = db.query(models.User).filter(models.User.id == purchase.user_id).first()
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # # Only allow admin to create purchases for other users
+    # requesting_user = db.query(models.User).filter(models.User.id == current_user_id).first()
+    # if purchase.user_id != current_user_id and requesting_user.role != "admin":
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Not authorized to create purchase for other users"
+    #     )
     
     # Get product and check stock
     product = db.query(models.Product).filter(models.Product.id == purchase.product_id).first()
@@ -19,101 +35,67 @@ def create_purchase(db: Session, purchase: PurchaseCreate, user_id: int):
             detail="Product not found"
         )
     
-    # Check if enough stock is available
     if product.stock < purchase.quantity:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Insufficient stock. Available: {product.stock}, Requested: {purchase.quantity}"
         )
 
-    # Calculate total amount based on quantity and validate paid amount
+    # Calculate total amount
     total_amount = Decimal(str(product.price)) * Decimal(str(purchase.quantity))
     total_amount = float(total_amount)
-    paid_amount = float(Decimal(str(purchase.paid_amount)))
+
+    # Validate total installment amounts match product price
+    total_installments = sum(inst.amount for inst in purchase.installment_plan)
+    if abs(total_installments - total_amount) > 0.01:  # Allow small float precision difference
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Sum of installments ({total_installments}) must equal total amount ({total_amount})"
+        )
+
+    purchase_date = datetime.utcnow()
     
-    # Validate paid amount
-    if paid_amount > total_amount:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Paid amount cannot be greater than total amount"
-        )
-
-    if paid_amount < 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Paid amount cannot be negative"
-        )
-
-    due_amount = total_amount - paid_amount
-    number_of_installments = 2 if due_amount > 0 else 1
-
-    # Determine initial status
-    initial_status = models.PaymentStatusEnum.paid.value if paid_amount >= total_amount else models.PaymentStatusEnum.pending.value
-
-    # Start transaction
     try:
         # Create purchase record
         new_purchase = models.Purchase(
-            user_id=user_id,
+            user_id=purchase.user_id,  # Use the provided user_id
             product_id=purchase.product_id,
             quantity=purchase.quantity,
             total_amount=total_amount,
-            paid_amount=paid_amount,
-            due_amount=due_amount,
-            number_of_installments=number_of_installments,
-            status=initial_status,
-            created_at=datetime.utcnow()
+            paid_amount=0,  # Will be updated as installments are paid
+            due_amount=total_amount,
+            number_of_installments=len(purchase.installment_plan),
+            status=models.PaymentStatusEnum.pending.value,
+            created_at=purchase_date
         )
         db.add(new_purchase)
         
         # Update product stock
-        if product.stock < purchase.quantity:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Insufficient stock. Available: {product.stock}, Requested: {purchase.quantity}"
-            )
-            
         product.stock -= purchase.quantity
-        product.updated_at = datetime.utcnow()
+        product.updated_at = purchase_date
         db.add(product)
         
         # Flush to get the purchase ID
         db.flush()
 
-        # Create first installment (paid amount)
-        if paid_amount > 0:
-            first_installment = models.Installment(
+        # Create installments based on the plan
+        for i, installment_plan in enumerate(purchase.installment_plan, start=1):
+            due_date = purchase_date + timedelta(days=installment_plan.days_after)
+            
+            installment = models.Installment(
                 purchase_id=new_purchase.id,
-                installment_no=1,
-                amount=paid_amount,
-                due_date=datetime.utcnow(),
-                is_paid=True,
-                status=models.PaymentStatusEnum.paid.value,
-                paid_date=datetime.utcnow()
-            )
-            db.add(first_installment)
-
-        # Create second installment if there's remaining amount
-        if due_amount > 0:
-            second_installment = models.Installment(
-                purchase_id=new_purchase.id,
-                installment_no=2,
-                amount=due_amount,
-                due_date=datetime.utcnow() + timedelta(days=30),
+                installment_no=i,
+                amount=installment_plan.amount,
+                due_date=due_date,
                 is_paid=False,
                 status=models.PaymentStatusEnum.pending.value,
                 paid_date=None
             )
-            db.add(second_installment)
+            db.add(installment)
 
         # Commit the transaction
         db.commit()
         db.refresh(new_purchase)
-        
-        # Load installments for response
-        installments = db.query(models.Installment).filter(
-            models.Installment.purchase_id == new_purchase.id
-        ).all()
         
         return new_purchase
 

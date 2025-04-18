@@ -17,6 +17,7 @@ def create_user(db: Session, user_data):
     db_user = models.User(
         email=user_data.email,
         name=user_data.name,
+        phone_number=user_data.phone_number,
         hashed_password=hashed_password,  
         otp=otp,
         otp_expiry=otp_expiry,

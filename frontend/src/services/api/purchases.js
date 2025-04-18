@@ -31,3 +31,11 @@ export const sendPurchaseNotification = (purchaseId, message) => {
     body: JSON.stringify({ message }),
   });
 };
+
+// Function to create a new purchase
+export const createPurchase = async (purchaseData) => {
+  return fetchWithAuth('/api/v1/purchases', {
+    method: 'POST',
+    body: JSON.stringify(purchaseData),
+  });
+};

@@ -13,6 +13,11 @@ def pay_installment(db: Session, installment_id: int, user_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Installment not found"
         )
+    if installment.is_paid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Installment already paid"
+        )
 
     try:
         # Update installment

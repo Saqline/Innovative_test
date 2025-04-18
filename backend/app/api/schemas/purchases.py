@@ -1,25 +1,8 @@
-from pydantic import BaseModel, Field, validator
-from decimal import Decimal
-from datetime import datetime
 from typing import List
-from .installments import InstallmentResponse
+from datetime import datetime, timedelta
+from app.api.schemas.installments import InstallmentResponse
+from pydantic import BaseModel, Field, validator
 
-class PurchaseCreate(BaseModel):
-    product_id: int = Field(..., gt=0)
-    quantity: int = Field(..., ge=1)
-    paid_amount: float = Field(..., ge=0)
-
-    @validator('paid_amount')
-    def validate_paid_amount(cls, v):
-        if v < 0:
-            raise ValueError('Paid amount cannot be negative')
-        return float(v)
-
-    @validator('quantity')
-    def validate_quantity(cls, v):
-        if v < 1:
-            raise ValueError('Quantity must be at least 1')
-        return v
 
 class PurchaseResponse(BaseModel):
     id: int
@@ -37,6 +20,36 @@ class PurchaseResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class InstallmentPlan(BaseModel):
+    amount: float
+    days_after: int  # Days after purchase date
+
+    @validator('amount')
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError('Installment amount must be greater than 0')
+        return float(v)
+
+    @validator('days_after')
+    def validate_days(cls, v):
+        if v < 0:
+            raise ValueError('Days must be 0 or positive')
+        return v
+
+class PurchaseCreate(BaseModel):
+    user_id: int = Field(..., gt=0)
+    product_id: int = Field(..., gt=0)
+    quantity: int = Field(..., ge=1)
+    installment_plan: List[InstallmentPlan]
+
+    @validator('installment_plan')
+    def validate_installment_plan(cls, v, values):
+        if not v:
+            raise ValueError('At least one installment is required')
+        return v
+
 
 class PurchaseWithInstallmentsResponse(PurchaseResponse):
     purchase_installments: List[InstallmentResponse]

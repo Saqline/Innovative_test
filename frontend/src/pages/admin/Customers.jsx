@@ -1,93 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DataTable from '../../components/admin/DataTable';
-// Link removed as View action is being removed for now
-// import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { getCustomers, deleteCustomer } from '../../services/api/users'; // Import API functions
-
-// Mock data removed
-/* Mock data structure for reference:
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '(123) 456-7890',
-    totalSpent: 1500,
-    activeInstallments: 2,
-    joinDate: '2023-01-15',
-    status: 'active'
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    phone: '(234) 567-8901',
-    totalSpent: 2200,
-    activeInstallments: 1,
-    joinDate: '2023-02-20',
-    status: 'active'
-  },
-  {
-    id: 3,
-    name: 'Robert Johnson',
-    email: 'robert.johnson@example.com',
-    phone: '(345) 678-9012',
-    totalSpent: 800,
-    activeInstallments: 1,
-    joinDate: '2023-03-10',
-    status: 'active'
-  },
-  {
-    id: 4,
-    name: 'Emily Davis',
-    email: 'emily.davis@example.com',
-    phone: '(456) 789-0123',
-    totalSpent: 3500,
-    activeInstallments: 0,
-    joinDate: '2023-01-05',
-    status: 'inactive'
-  },
-  {
-    id: 5,
-    name: 'Michael Wilson',
-    email: 'michael.wilson@example.com',
-    phone: '(567) 890-1234',
-    totalSpent: 1200,
-    activeInstallments: 1,
-    joinDate: '2023-04-15',
-    status: 'active'
-  },
-  {
-    id: 6,
-    name: 'Sarah Thompson',
-    email: 'sarah.thompson@example.com',
-    phone: '(678) 901-2345',
-    totalSpent: 950,
-    activeInstallments: 1,
-    joinDate: '2023-05-22',
-    status: 'active'
-  },
-  {
-    id: 7,
-    name: 'David Miller',
-    email: 'david.miller@example.com',
-    phone: '(789) 012-3456',
-    totalSpent: 2800,
-    activeInstallments: 1,
-    joinDate: '2023-02-28',
-    status: 'active'
-  },
-  {
-    id: 8,
-    name: 'Jessica Brown',
-    email: 'jessica.brown@example.com',
-    phone: '(890) 123-4567',
-    totalSpent: 1750,
-    activeInstallments: 0,
-    joinDate: '2023-03-15',
-    status: 'inactive'
-  }
-*/
+import { getCustomers, deleteCustomer } from '../../services/api/users';
+import CreateCustomerModal from '../../components/admin/CreateCustomerModal';
+import VerifyCustomerModal from '../../components/admin/VerifyCustomerModal';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
@@ -95,6 +11,9 @@ const Customers = () => {
   const [error, setError] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [customerToVerify, setCustomerToVerify] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
     size: 10, // Corresponds to page_size in backend
@@ -137,12 +56,25 @@ const Customers = () => {
     {
       Header: 'Verified',
       accessor: 'is_verified',
-      Cell: ({ value }) => (
-         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-           value ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-         }`}>
-           {value ? 'Yes' : 'No'}
-         </span>
+      Cell: ({ value, row }) => (
+        <div className="flex items-center space-x-2">
+          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+            value ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+          }`}>
+            {value ? 'Yes' : 'No'}
+          </span>
+          {!value && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVerifyClick(row.original);
+              }}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Verify
+            </button>
+          )}
+        </div>
       )
     },
     {
@@ -200,6 +132,12 @@ const Customers = () => {
     // setLoading(false) will be handled in fetchData's finally block
   };
 
+  // Add verify click handler
+  const handleVerifyClick = (customer) => {
+    setCustomerToVerify(customer);
+    setIsVerifyModalOpen(true);
+  };
+
   // Fetching logic
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -254,6 +192,15 @@ const Customers = () => {
   return (
     <div>
       <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
+       
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Create Customer
+        </button>
+      </div>
         <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
         <p className="text-gray-600">Manage your customer accounts and view their installment history</p>
       </div>
@@ -355,6 +302,29 @@ const Customers = () => {
           </div>
         </div>
       )}
+     {/* Create Customer Modal */}
+      <CreateCustomerModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => {
+          fetchData();
+          setIsCreateModalOpen(false);
+        }}
+      />
+      {/* Add verify modal */}
+      <VerifyCustomerModal
+        isOpen={isVerifyModalOpen}
+        onClose={() => {
+          setIsVerifyModalOpen(false);
+          setCustomerToVerify(null);
+        }}
+        customerEmail={customerToVerify?.email}
+        onSuccess={() => {
+          fetchData();
+          setIsVerifyModalOpen(false);
+          setCustomerToVerify(null);
+        }}
+      />
     </div>
   );
 };

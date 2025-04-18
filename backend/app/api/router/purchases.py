@@ -1,5 +1,6 @@
 from app.api.schemas.notifications import NotificationResponse, PurchaseNotificationCreate
 from app.api.service.notifications import send_purchase_notification
+from app.db import models
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -11,11 +12,11 @@ from typing import Optional
 
 router = APIRouter()
 
-@router.post("/", response_model=PurchaseResponse, status_code=status.HTTP_201_CREATED)
-def create_new_purchase(
+@router.post("/", response_model=PurchaseResponse)
+def create_purchase_endpoint(
     purchase: PurchaseCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
 ):
     return create_purchase(db, purchase, current_user.id)
 
