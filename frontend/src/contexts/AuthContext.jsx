@@ -187,5 +187,6 @@ const resendOTP = async (email) => {
   } catch (error) {
     console.error('Resend OTP error:', error);
     throw error;
+    
   }
 };
