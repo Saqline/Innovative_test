@@ -26,7 +26,7 @@ def create_user(db: Session, user_data):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return 
+    return db_user
 
 def create_user_admin(db: Session, user_data):
     # Generate OTP with 5 minute expiry
