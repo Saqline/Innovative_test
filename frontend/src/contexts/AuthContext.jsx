@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
   // Register function
   const register = async (userData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/register-admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

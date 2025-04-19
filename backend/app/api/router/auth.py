@@ -20,6 +20,7 @@ from app.api.schemas.auth import (
 )
 from app.api.service.auth import (
     create_user,
+    create_user_admin,
     verify_otp,
     authenticate_user,
     send_otp_email,
@@ -41,6 +42,15 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     user = create_user(db, user_data)
+    send_otp_email(user.email, user.otp)
+    return user
+@router.post("/register-admin", response_model=UserResponse)
+def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(models.User).filter(models.User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user = create_user_admin(db, user_data)
     send_otp_email(user.email, user.otp)
     return user
 

@@ -26,6 +26,29 @@ def create_user(db: Session, user_data):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    return 
+
+def create_user_admin(db: Session, user_data):
+    # Generate OTP with 5 minute expiry
+    otp = str(random.randint(100000, 999999))
+    otp_expiry = datetime.utcnow() + timedelta(minutes=5)
+    
+    # Hash the password before storing
+    hashed_password = get_password_hash(user_data.password)
+    
+    db_user = models.User(
+        email=user_data.email,
+        name=user_data.name,
+        role="admin",
+        phone_number=user_data.phone_number,
+        hashed_password=hashed_password,  
+        otp=otp,
+        otp_expiry=otp_expiry,
+        is_active=False
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 def verify_otp(db: Session, email: str, otp: str):

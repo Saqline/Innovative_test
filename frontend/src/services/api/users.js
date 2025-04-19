@@ -30,6 +30,14 @@ export const createCustomer = (customerData) => {
   });
 };
 
+export const createCustomerAdmin = (customerData) => {
+  return fetchWithAuth('/api/v1/auth/register-admin', {
+    method: 'POST',
+    body: JSON.stringify(customerData),
+  });
+};
+
+
 export const verifyCustomerOTP = (email, otp) => {
   return fetchWithAuth('/api/v1/auth/verify-otp', {
     method: 'POST',

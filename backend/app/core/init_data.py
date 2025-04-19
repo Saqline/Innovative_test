@@ -13,7 +13,7 @@ def create_default_users(db: Session):
     admin_data = UserCreate(
         name="admin",
         email="admin@admin.com",
-        password="admin",
+        password="admin123",
         phone_number="+1234567890"  
     )
     

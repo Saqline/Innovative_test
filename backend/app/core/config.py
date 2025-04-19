@@ -10,6 +10,6 @@ class Settings:
     EMAIL_PASS = os.getenv("EMAIL_PASS")
     SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key")
     ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES = 100
 
 settings = Settings()

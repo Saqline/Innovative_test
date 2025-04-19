@@ -6,11 +6,30 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      'process.env.REACT_APP_API_BASE_URL': JSON.stringify(env.REACT_APP_API_BASE_URL)
+      'process.env.REACT_APP_API_URL': JSON.stringify(env.REACT_APP_API_URL)
     },
     server: {
       port: 3000,
       open: true
+    },
+    preview: {
+      port: 3000,
+      host: true,
+      strictPort: true
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: false,
+      chunkSizeWarningLimit: 1600,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+          }
+        }
+      }
     }
   };
 });
