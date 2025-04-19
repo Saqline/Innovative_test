@@ -1,0 +1,49 @@
++-------------------+       +-------------------+       +-------------------+
+|       User        |       |     Category      |       |      Product      |
++-------------------+       +-------------------+       +-------------------+
+| id (PK)           |------| id (PK)            |-------| id (PK)           |
+| name              |       | name (UNIQUE)     |       | category_id (FK)  |
+| email (UNIQUE)    |       | created_at        |       | name              |
+| phone_number      |       +-------------------+       | price             |
+| hashed_password   |                                   | stock             |
+| role              |                                   | image_url         |
+| otp               |                                   | description       |
+| otp_expiry        |                                   | created_at        |
+| is_active         |                                   | updated_at        |
+| is_verified       |                                   +-------------------+
+| created_at        |                                            
++-------------------+                                            
+       |                                                         
+       |                                                         
+       |                                                         
+       |                                                         
++-------------------+                                  +-------------------+
+|     Purchase      |                                  |   Notification    |
++-------------------+                                  +-------------------+
+| id (PK)           |                                  | id (PK)           |
+| user_id (FK)      |                                  | user_id (FK)      |
+| product_id (FK)   |                                  | message           |
+| quantity          |                                  | notification_type |
+| total_amount      |                                  | is_read           |
+| paid_amount       |                                  | created_at        |
+| due_amount        |                                  +-------------------+
+| number_of_installments|                                     | 
+| status            |                                         |
+| created_at        |                                         |
+| updated_at        |                                         |
++-------------------+                                         |
+       |                                                      |
+       |                                                      |
+       |                                                      |
++-------------------+                                         | 
+|    Installment    |                                         |
++-------------------+                                         |
+| id (PK)           |                                         | 
+| purchase_id (FK)  |-----------------------------------------+
+| amount            |
+| installment_no    |
+| due_date          |
+| paid_date         |
+| status            |
+| is_paid           |
++-------------------+
